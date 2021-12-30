@@ -4,7 +4,7 @@ import pandas as pd
 # import matplotlib.pyplot as plt
 
 # Input file should be stored in ./input/ as 'players_all.rtf'
-INPUT_FILENAME = './input/players_all.rtf'
+INPUT_FILENAME = './input/player_search.rtf'
 
 TECHNICAL_ATTRIBUTES = ['Cor', 'Cro', 'Dri', 'Fin', 'Fir', 'Fre', 'Hea', 'Lon', 'L Th', 'Mar', 'Pas', 'Pen', 'Tck', 'Tec']
 MENTAL_ATTRIBUTES 	 = ['Agg', 'Ant', 'Bra', 'Cmp', 'Cnt', 'Dec', 'Det', 'Fla', 'Ldr', 'OtB', 'Pos', 'Tea', 'Vis', 'Wor']
