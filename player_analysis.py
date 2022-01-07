@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import io, sys
+import io, sys, time
 import pandas as pd
 # import matplotlib.pyplot as plt
 
@@ -12,51 +12,52 @@ PHYSICAL_ATTRIBUTES  = ['Acc', 'Agi', 'Bal', 'Jum', 'Nat', 'Pac', 'Sta', 'Str']
 GK_ATTRIBUTES 		 = ['Aer', 'Cmd', 'Com', 'Ecc', 'Han', 'Kic', '1v1', 'Pun', 'Ref', 'TRO', 'Thr']
 ALL_ATTRIBUTES		 = TECHNICAL_ATTRIBUTES + MENTAL_ATTRIBUTES + PHYSICAL_ATTRIBUTES + GK_ATTRIBUTES
 
+# Helper function for skiprows parameter in pandas.read_csv()
+# Returns True for all lines numbers to read & returns False for all line numbers to skip
+def skip_rows(x):
+	if x < 9:
+		return False
+	if x % 2 == 0:
+		return False
+	else:
+		return True
+
 def load_all_players():
 
+	load_rtf_start_time = time.time()
+
 	try:
-		with open(INPUT_FILENAME) as input_file:
-			raw_input = input_file.read()
+		# index_col remove
+		df = pd.read_csv(INPUT_FILENAME, sep = '|', skiprows=lambda x: skip_rows(x))
+		
+		# In its current state, read_csv() includes an extra column with label ' ' and NaN for all values
+		df.drop([' '], axis=1)
+
+		print('time to load rtf into dataframe: {:.3f}s'.format(time.time() - load_rtf_start_time))
+	
 	except:
-		print('Error: failed to open input file: \'./{}\''.format(INPUT_FILENAME))
+		print('Error: failed to load input file \'./{}\' into the df'.format(INPUT_FILENAME))
+		
 		sys.exit(1)
 
-	input_string = ''
+	print(df[0])
 
-	# Converts FM's custom .rtf formatting into string of comma-separated-values so that we
-	# can use pandas.read_csv() to do all the work for us
-	for line in raw_input.split('\n'):
-		# FM uses the opening and closing tags of |c:disabled| and |/c| to designate
-		# italics when exporting to the .rtf format
-		# In order to properly split the line based on the '|' character, those tags must be cleaned
-		line = line.replace('|c:disabled|', '').replace('|/c|','')
-		line_object = [item.strip() for item in line.split('|')[1:-1]]
-
-		if len(line_object) <= 1:
-			# Empty or dashed-only line
-			continue
-		else:
-			for item in line_object:
-				# .replace(',', '') removes commas from certain features (e.g. salary, secondary positions)
-				# without this cleaning, read_csv can't properly read our input string
-				input_string += item.replace(',', '') + ','
-			# Cleans up extra comma left at the end of rows
-			input_string = input_string[:-1]
-			input_string += '\n'
-
-	# Cleans up extra newline char left at the end of input string
-	input_string = input_string[:-1]
-
-	# io.StringIO() allows pandas.read_csv() to read the string input as though
-	# it were a filestream
-	return pd.read_csv(io.StringIO(input_string))
+	return df
 
 def preprocessing(df):
+
+	preprocessing_start_time = time.time()
+
+	print('here 0')
+
+	print(df.columns)
 
 	# Non-GK players have a value of '-' for all GK-related attributes, while
 	# GKs have a value of '-' for all technical attributes. Replacing that '-' value w/
 	# zero is necessary for future arithmetic operations on those columns
 	df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES] = df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES].replace('-', '0')
+
+	print('making it here')
 
 	# Check if any of the scouting of any inputted players is incomplete
 	# (i.e., attributes represented as a range, and not a single value)
@@ -66,9 +67,13 @@ def preprocessing(df):
 	for attribute in ALL_ATTRIBUTES:
 		df[attribute] = pd.to_numeric(df[attribute])
 
+	print('time to load rtf into dataframe: {:.2f}s'.format(time.time() - load_rtf_start_time))
+
 	return df
 
 def clean_incomplete_scouting(df):
+
+	clean_incomplete_scouting_start_time = time.time()
 
 	for index, row in df.iterrows():
 		# If Know. Lvl <= 75% for a given player, some attributes may be represented 
@@ -78,21 +83,12 @@ def clean_incomplete_scouting(df):
 		if int(row['Know. Lvl'][:-1]) <= 75:
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
+					print(row[attribute])
 					range_mean = int(sum(int(_) for _ in row[attribute].split('-')) / 2)
 					df.at[index, attribute] = range_mean
+					print(range_mean)
 
-	# 	for attribute in ALL_ATTRIBUTES:
-	# 		# For GKs, all technical skills are respresented as a '-'
-	# 		# For Outfield players, all GK skills are represented as a '-'
-	# 		# For later mathematical operations, we want to replace this '-' with a 0
-	# 		if row[attribute] == '-':
-	# 			print('Changing attribute to 0')
-	# 			row[attribute] = 0
-	# 		# If scouting on the player is incomplete, the attribute is given as a range (e.g. 7-13)
-	# 		# For later mathematical operations, we want to replace this range with a single value
-	# 		elif '-' in row[attribute]:
-	# 			attribute_range = [int(_) for _ in row[attribute].split('-')]
-	# 			row[attribute] = sum(attribute_range)/len(attribute_range)
+	print('time to load rtf into dataframe: {:.2f}s'.format(time.time() - load_rtf_start_time))
 
 	return df
 
