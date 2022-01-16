@@ -28,19 +28,14 @@ def load_all_players():
 
 	try:
 		# index_col remove
-		df = pd.read_csv(INPUT_FILENAME, sep = '|', skiprows=lambda x: skip_rows(x))
-		
-		# In its current state, read_csv() includes an extra column with label ' ' and NaN for all values
-		df.drop([' '], axis=1)
+		df = pd.read_csv(INPUT_FILENAME, sep = '|', skiprows=lambda x: skip_rows(x), skipinitialspace=True)
 
 		print('time to load rtf into dataframe: {:.3f}s'.format(time.time() - load_rtf_start_time))
 	
 	except:
-		print('Error: failed to load input file \'./{}\' into the df'.format(INPUT_FILENAME))
+		print('error: failed to load input file \'./{}\' into the df'.format(INPUT_FILENAME))
 		
 		sys.exit(1)
-
-	print(df[0])
 
 	return df
 
@@ -48,16 +43,20 @@ def preprocessing(df):
 
 	preprocessing_start_time = time.time()
 
-	print('here 0')
+	# In its current state, read_csv() includes two extra, unnamed columns
+	# before and after all of the real columns (i.e., at index 0 & -1)
+	df = df.iloc[:, 1:-1]
 
-	print(df.columns)
+	# Removes whitespace from column headers
+	df = df.rename(columns=lambda x: x.strip())
+
+	# Removes whitespace from body (all values)
+	df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
 	# Non-GK players have a value of '-' for all GK-related attributes, while
 	# GKs have a value of '-' for all technical attributes. Replacing that '-' value w/
 	# zero is necessary for future arithmetic operations on those columns
 	df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES] = df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES].replace('-', '0')
-
-	print('making it here')
 
 	# Check if any of the scouting of any inputted players is incomplete
 	# (i.e., attributes represented as a range, and not a single value)
@@ -67,7 +66,7 @@ def preprocessing(df):
 	for attribute in ALL_ATTRIBUTES:
 		df[attribute] = pd.to_numeric(df[attribute])
 
-	print('time to load rtf into dataframe: {:.2f}s'.format(time.time() - load_rtf_start_time))
+	print('preprocessing time: {:.2f}s'.format(time.time() - preprocessing_start_time))
 
 	return df
 
@@ -81,6 +80,7 @@ def clean_incomplete_scouting(df):
 		# future arithmetic operations on these columns, we'll need to convert those 
 		# ranges into a single, mean value (rounding down)
 		if int(row['Know. Lvl'][:-1]) <= 75:
+			print(row)
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
 					print(row[attribute])
@@ -88,7 +88,7 @@ def clean_incomplete_scouting(df):
 					df.at[index, attribute] = range_mean
 					print(range_mean)
 
-	print('time to load rtf into dataframe: {:.2f}s'.format(time.time() - load_rtf_start_time))
+	print('time to clean incomplete scouting: {:.2f}s'.format(time.time() - clean_incomplete_scouting_start_time))
 
 	return df
 
