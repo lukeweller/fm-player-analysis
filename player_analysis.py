@@ -53,10 +53,31 @@ def preprocessing(df):
 	# Removes whitespace from body (all values)
 	df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-	# Non-GK players have a value of '-' for all GK-related attributes, while
-	# GKs have a value of '-' for all technical attributes. Replacing that '-' value w/
-	# zero is necessary for future arithmetic operations on those columns
-	df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES] = df[GK_ATTRIBUTES + TECHNICAL_ATTRIBUTES].replace('-', '0')
+	# FM uses the abbreviation 'Nat' for both 'Nationality' and 'Natural Fitness'
+	# If both features appear in the same input, read_csv() will create two columns with the column name 'Nat'
+	# Duplicate column names will cause signifcant problems during later data analysis
+	# To solve this, we'll rename the first 'Nat' column to 'Nationality'
+	# The remaining, single 'Nat' column should now correspond only to 'Natural Fitness'
+	found_nationality = False
+	new_cols = []
+
+	if len(df.columns) != len(set(df.columns)):
+		for col in df.columns:
+			if col == 'Nat' and found_nationality == False:
+					new_cols.append('Nationality')
+					found_nationality = True
+			else:
+				new_cols.append(col)
+
+	df.columns = new_cols
+
+	# Here we replace any missing values ('-') in the df with '0'
+	# 	1. Non-GK players have a value of '-' for all GK-related attributes, while
+	# 	   GKs have a value of '-' for all technical attributes. Replacing that '-' value w/
+	# 	   zero is necessary for future arithmetic operations on those columns
+	# 	2. It's also possible for incompletely scouted players to have '-' for any attribute
+	
+	df[ALL_ATTRIBUTES] = df[ALL_ATTRIBUTES].replace('-', '0')
 
 	# Check if any of the scouting of any inputted players is incomplete
 	# (i.e., attributes represented as a range, and not a single value)
@@ -80,13 +101,10 @@ def clean_incomplete_scouting(df):
 		# future arithmetic operations on these columns, we'll need to convert those 
 		# ranges into a single, mean value (rounding down)
 		if int(row['Know. Lvl'][:-1]) <= 75:
-			print(row)
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
-					print(row[attribute])
 					range_mean = int(sum(int(_) for _ in row[attribute].split('-')) / 2)
 					df.at[index, attribute] = range_mean
-					print(range_mean)
 
 	print('time to clean incomplete scouting: {:.2f}s'.format(time.time() - clean_incomplete_scouting_start_time))
 
