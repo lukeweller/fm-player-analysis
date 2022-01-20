@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import io, sys, time
+import sys, time
 import pandas as pd
 # import matplotlib.pyplot as plt
 
@@ -22,13 +22,12 @@ def skip_rows(x):
 	else:
 		return True
 
-def load_all_players():
+def load_all_players(input_filename):
 
 	load_rtf_start_time = time.time()
 
 	try:
-		# index_col remove
-		df = pd.read_csv(INPUT_FILENAME, sep = '|', skiprows=lambda x: skip_rows(x), skipinitialspace=True)
+		df = pd.read_csv(input_filename, sep = '|', skiprows=lambda x: skip_rows(x), skipinitialspace=True)
 
 		print('time to load rtf into dataframe: {:.3f}s'.format(time.time() - load_rtf_start_time))
 	
@@ -39,7 +38,7 @@ def load_all_players():
 
 	return df
 
-def preprocessing(df):
+def preprocessing(df, cache_filename):
 
 	preprocessing_start_time = time.time()
 
@@ -71,23 +70,25 @@ def preprocessing(df):
 
 	df.columns = new_cols
 
-	# Here we replace any missing values ('-') in the df with '0'
+	# Here we replace any missing values ('-') in the df with '0':
 	# 	1. Non-GK players have a value of '-' for all GK-related attributes, while
 	# 	   GKs have a value of '-' for all technical attributes. Replacing that '-' value w/
 	# 	   zero is necessary for future arithmetic operations on those columns
 	# 	2. It's also possible for incompletely scouted players to have '-' for any attribute
-	
 	df[ALL_ATTRIBUTES] = df[ALL_ATTRIBUTES].replace('-', '0')
 
 	# Check if any of the scouting of any inputted players is incomplete
 	# (i.e., attributes represented as a range, and not a single value)
-	if min(int(knowledge_lvl[:-1]) for knowledge_lvl in df['Know. Lvl']) <= 75:
+	# Incomplete can occur iff a player's knowledge level is <= 76%
+	if min(int(knowledge_lvl[:-1]) for knowledge_lvl in df['Know. Lvl']) <= 76:
+		# If attribute ranges are found, we use clean_incomplete_scouting to replace those
+		# those ranges w/ a single, mean value
 		df = clean_incomplete_scouting(df)
 
 	for attribute in ALL_ATTRIBUTES:
 		df[attribute] = pd.to_numeric(df[attribute])
 
-	print('preprocessing time: {:.2f}s'.format(time.time() - preprocessing_start_time))
+	print('preprocessing time: {:.3f}s'.format(time.time() - preprocessing_start_time))
 
 	return df
 
@@ -100,13 +101,13 @@ def clean_incomplete_scouting(df):
 		# as a range instead of a single value (e.g. Pac: 10-15). In order to perform
 		# future arithmetic operations on these columns, we'll need to convert those 
 		# ranges into a single, mean value (rounding down)
-		if int(row['Know. Lvl'][:-1]) <= 75:
+		if int(row['Know. Lvl'][:-1]) <= 76:
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
 					range_mean = int(sum(int(_) for _ in row[attribute].split('-')) / 2)
 					df.at[index, attribute] = range_mean
 
-	print('time to clean incomplete scouting: {:.2f}s'.format(time.time() - clean_incomplete_scouting_start_time))
+	print('time to clean incomplete scouting: {:.3f}s'.format(time.time() - clean_incomplete_scouting_start_time))
 
 	return df
 
@@ -146,21 +147,46 @@ def relative_score(df, range_min=0, range_max=100):
 def print_help_msg():
 	
 	print('Usage:\n'
-		  '	1. Import custom view file (`./views/All.fmf`) into the \'Staff Search\' page while in FM\n'
-		  '	2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file to `./input/All.rtf`\n'
+		  '	1. Import custom view file (`./views/Player Search.fmf`) into the \'Player Search\' page while in FM\n'
+		  '	2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file to `./input/player_search.rtf`\n'
 		  '	3. Use `./player_analysis.py` to analyze players and print top canidates\n'
 		  'Options:\n'
 		  '	-i, --input\n'
 		  '		specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
+		  ' -c, --cache\n'
+		  '		save the cleaned dataframe into a new file in order to limit processing time on future runs;\n'
+		  '		e.g., ./player_analysis -c [filename]\n'
 		  '	-h, --help\n'
 		  '		print this message')
 
 if __name__ == '__main__':
 
-	df = load_all_players()
+	args = sys.argv[1:]
 
-	df = preprocessing(df)
+	input_filename = ''
+	cache_filename = ''
+
+	# Iterate through args
+	while len(args) > 0:
+		arg = args.pop(0)
+		if arg == '-h' or arg == '--help':
+			print_help_msg()
+			exit(0)
+		elif arg == '-i' or arg == '--input':
+			input_filename = args.pop(0)
+		elif arg == '-c' or arg == '--cache':
+			cache_filename = args.pop(0)
+		else:
+			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
+			exit(1)
+
+	if input_filename == '':
+		input_filename = INPUT_FILENAME
+
+	df = load_all_players(input_filename)
+
+	df = preprocessing(df, cache_filename)
 
 	df = player_analyis(df)
 
-	print(df[['technical_sum', 'mental_sum', 'physical_sum', 'relative_score', 'Age', 'Name']].head(50))
+	print(df[['relative_score', 'Age', 'Name']].head(50))
