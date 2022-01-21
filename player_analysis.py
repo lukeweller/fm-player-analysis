@@ -4,6 +4,7 @@ import pandas as pd
 # import matplotlib.pyplot as plt
 
 DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
+DEFAULT_PRINT_NO = 50
 
 TECHNICAL_ATTRIBUTES = ['Cor', 'Cro', 'Dri', 'Fin', 'Fir', 'Fre', 'Hea', 'Lon', 'L Th', 'Mar', 'Pas', 'Pen', 'Tck', 'Tec']
 MENTAL_ATTRIBUTES 	 = ['Agg', 'Ant', 'Bra', 'Cmp', 'Cnt', 'Dec', 'Det', 'Fla', 'Ldr', 'OtB', 'Pos', 'Tea', 'Vis', 'Wor']
@@ -182,6 +183,10 @@ def relative_score(df, range_min=0, range_max=100):
 
 	return df
 
+def print_players(df, features, print_no):
+
+	print(df[features].head(print_no))
+
 def print_help_msg(exit_status):
 	
 	print('Usage:\n'
@@ -198,6 +203,8 @@ def print_help_msg(exit_status):
 		  '		if the script does not find a cleaned .csv, it will process the .rtf normally\n'
 		  '		and save the clean df into a new .csv file in the ./input/csv/ folder;\n'
 		  '		enabling caching allows for quicker processing times on subsequent runs\n'
+		  ' -n, --number\n'
+		  '		specify the number of analyzed players to print; e.g., ./player_analyis.py -n 25'
 		  '	-h, --help\n'
 		  '		print this message')
 
@@ -207,8 +214,9 @@ if __name__ == '__main__':
 
 	args = sys.argv[1:]
 
-	input_filename = ''
+	input_filename = DEFAULT_INPUT_FILENAME
 	caching = False
+	print_no = DEFAULT_PRINT_NO
 
 	# Iterate through args
 	while len(args) > 0:
@@ -219,15 +227,14 @@ if __name__ == '__main__':
 			input_filename = args.pop(0)
 		elif arg == '-c' or arg == '--cache':
 			caching = True
+		elif arg == '-n' or arg == '--number':
+			print_no = int(args.pop(0))
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			print_help_msg(1)
-
-	if input_filename == '':
-		input_filename = DEFAULT_INPUT_FILENAME
 
 	df = load_players(input_filename, caching)
 
 	df = player_analyis(df)
 
-	print(df[['relative_score', 'Age', 'Name']].head(50))
+	print_players(df, ['attribute_sum', 'relative_score', 'Age', 'Name'], print_no)
