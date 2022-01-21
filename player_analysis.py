@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import sys, time
+import os, sys, time
 import pandas as pd
 # import matplotlib.pyplot as plt
 
-# Input file should be stored in ./input/ as 'players_all.rtf'
-INPUT_FILENAME = './input/player_search.rtf'
+DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
 
 TECHNICAL_ATTRIBUTES = ['Cor', 'Cro', 'Dri', 'Fin', 'Fir', 'Fre', 'Hea', 'Lon', 'L Th', 'Mar', 'Pas', 'Pen', 'Tck', 'Tec']
 MENTAL_ATTRIBUTES 	 = ['Agg', 'Ant', 'Bra', 'Cmp', 'Cnt', 'Dec', 'Det', 'Fla', 'Ldr', 'OtB', 'Pos', 'Tea', 'Vis', 'Wor']
@@ -22,14 +21,29 @@ def skip_rows(x):
 	else:
 		return True
 
-def load_all_players(input_filename):
+# Simple wrapper function that calls load_all_players_rtf() or load_all_players_csv(), depending on state
+def load_players(input_filename, caching):
+
+	cache_filename = './input/csv/' + input_filename[12:-4] + '_cleaned.csv'
+
+	if caching and os.path.exists(cache_filename):
+		df = load_players_csv(cache_filename)
+	else:
+		df = load_players_rtf(input_filename)
+		df = preprocessing(df)
+		if caching:
+			write_df_to_csv(df, cache_filename)
+
+	return df
+
+def load_players_rtf(input_filename):
 
 	load_rtf_start_time = time.time()
 
 	try:
 		df = pd.read_csv(input_filename, sep = '|', skiprows=lambda x: skip_rows(x), skipinitialspace=True)
 
-		print('time to load rtf into dataframe: {:.3f}s'.format(time.time() - load_rtf_start_time))
+		print('time to load \'{}\' into dataframe: {:.3f}s'.format(input_filename, time.time() - load_rtf_start_time))
 	
 	except:
 		print('error: failed to load input file \'./{}\' into the df'.format(INPUT_FILENAME))
@@ -38,7 +52,23 @@ def load_all_players(input_filename):
 
 	return df
 
-def preprocessing(df, cache_filename):
+def load_players_csv(input_filename):
+
+	load_csv_start_time = time.time()
+
+	try:
+		df = pd.read_csv(input_filename)
+
+		print('time to load \'{}\' into dataframe: {:.3f}s'.format(input_filename, time.time() - load_csv_start_time))
+	
+	except:
+		print('error: failed to load input file \'./{}\' into the df'.format(input_filename))
+		
+		sys.exit(1)
+
+	return df
+
+def preprocessing(df):
 
 	preprocessing_start_time = time.time()
 
@@ -57,10 +87,10 @@ def preprocessing(df, cache_filename):
 	# Duplicate column names will cause signifcant problems during later data analysis
 	# To solve this, we'll rename the first 'Nat' column to 'Nationality'
 	# The remaining, single 'Nat' column should now correspond only to 'Natural Fitness'
-	found_nationality = False
-	new_cols = []
-
 	if len(df.columns) != len(set(df.columns)):
+		found_nationality = False
+		new_cols = []
+		
 		for col in df.columns:
 			if col == 'Nat' and found_nationality == False:
 					new_cols.append('Nationality')
@@ -68,7 +98,7 @@ def preprocessing(df, cache_filename):
 			else:
 				new_cols.append(col)
 
-	df.columns = new_cols
+		df.columns = new_cols
 
 	# Here we replace any missing values ('-') in the df with '0':
 	# 	1. Non-GK players have a value of '-' for all GK-related attributes, while
@@ -88,7 +118,7 @@ def preprocessing(df, cache_filename):
 	for attribute in ALL_ATTRIBUTES:
 		df[attribute] = pd.to_numeric(df[attribute])
 
-	print('preprocessing time: {:.3f}s'.format(time.time() - preprocessing_start_time))
+	print('total preprocessing time: {:.3f}s'.format(time.time() - preprocessing_start_time))
 
 	return df
 
@@ -110,6 +140,14 @@ def clean_incomplete_scouting(df):
 	print('time to clean incomplete scouting: {:.3f}s'.format(time.time() - clean_incomplete_scouting_start_time))
 
 	return df
+
+def write_df_to_csv(df, cache_filename):
+
+	write_df_to_csv_start_time = time.time()
+
+	df.to_csv(cache_filename, index=False)
+
+	print('time to write cleaned data to file: {:.3f}s'.format(time.time() - write_df_to_csv_start_time))
 
 def player_analyis(df):
 
@@ -144,7 +182,7 @@ def relative_score(df, range_min=0, range_max=100):
 
 	return df
 
-def print_help_msg():
+def print_help_msg(exit_status):
 	
 	print('Usage:\n'
 		  '	1. Import custom view file (`./views/Player Search.fmf`) into the \'Player Search\' page while in FM\n'
@@ -154,38 +192,41 @@ def print_help_msg():
 		  '	-i, --input\n'
 		  '		specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
 		  ' -c, --cache\n'
-		  '		save the cleaned dataframe into a new file in order to limit processing time on future runs;\n'
-		  '		e.g., ./player_analysis -c [filename]\n'
+		  '		enables caching; when enabled, the script will first attempt to load player\n'
+		  '		data from an exisiting, cleaned .csv that corresponds to the given input .rtf\n'
+		  '		e.g., ./input/rtf/player_search.rtf -> ./input/csv/player_search_cleaned.csv\n'
+		  '		if the script does not find a cleaned .csv, it will process the .rtf normally\n'
+		  '		and save the clean df into a new .csv file in the ./input/csv/ folder;\n'
+		  '		enabling caching allows for quicker processing times on subsequent runs\n'
 		  '	-h, --help\n'
 		  '		print this message')
+
+	exit(exit_status)
 
 if __name__ == '__main__':
 
 	args = sys.argv[1:]
 
 	input_filename = ''
-	cache_filename = ''
+	caching = False
 
 	# Iterate through args
 	while len(args) > 0:
 		arg = args.pop(0)
 		if arg == '-h' or arg == '--help':
-			print_help_msg()
-			exit(0)
+			print_help_msg(0)
 		elif arg == '-i' or arg == '--input':
 			input_filename = args.pop(0)
 		elif arg == '-c' or arg == '--cache':
-			cache_filename = args.pop(0)
+			caching = True
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
-			exit(1)
+			print_help_msg(1)
 
 	if input_filename == '':
-		input_filename = INPUT_FILENAME
+		input_filename = DEFAULT_INPUT_FILENAME
 
-	df = load_all_players(input_filename)
-
-	df = preprocessing(df, cache_filename)
+	df = load_players(input_filename, caching)
 
 	df = player_analyis(df)
 
