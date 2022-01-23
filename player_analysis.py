@@ -15,9 +15,7 @@ ALL_ATTRIBUTES		 = TECHNICAL_ATTRIBUTES + MENTAL_ATTRIBUTES + PHYSICAL_ATTRIBUTE
 # Helper function for skiprows parameter in pandas.read_csv()
 # Returns True for all lines numbers to read & returns False for all line numbers to skip
 def skip_rows(x):
-	if x < 9:
-		return False
-	if x % 2 == 0:
+	if x < 9 or x % 2 == 0:
 		return False
 	else:
 		return True
@@ -47,7 +45,7 @@ def load_players_rtf(input_filename):
 		print('time to load \'{}\' into dataframe: {:.3f}s'.format(input_filename, time.time() - load_rtf_start_time))
 	
 	except:
-		print('error: failed to load input file \'./{}\' into the df'.format(INPUT_FILENAME))
+		print('error: failed to load input file \'{}\' into the df'.format(INPUT_FILENAME))
 		
 		sys.exit(1)
 
