@@ -5,6 +5,7 @@ import pandas as pd
 
 DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
 DEFAULT_PRINT_NO = 50
+DEFAULT_SORT_BY = 'relative_score'
 
 TECHNICAL_ATTRIBUTES = ['Cor', 'Cro', 'Dri', 'Fin', 'Fir', 'Fre', 'Hea', 'Lon', 'L Th', 'Mar', 'Pas', 'Pen', 'Tck', 'Tec']
 MENTAL_ATTRIBUTES 	 = ['Agg', 'Ant', 'Bra', 'Cmp', 'Cnt', 'Dec', 'Det', 'Fla', 'Ldr', 'OtB', 'Pos', 'Tea', 'Vis', 'Wor']
@@ -82,10 +83,12 @@ def preprocessing(df):
 	df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
 	# FM uses the abbreviation 'Nat' for both 'Nationality' and 'Natural Fitness'
-	# If both features appear in the same input, read_csv() will create two columns with the column name 'Nat'
-	# Duplicate column names will cause signifcant problems during later data analysis
-	# To solve this, we'll rename the first 'Nat' column to 'Nationality'
-	# The remaining, single 'Nat' column should now correspond only to 'Natural Fitness'
+	# In its current state, read_csv() behaves differently based on the view used to create the input
+	# 	- for './views/Player Search.fmf':
+	# 		If both features appear in the same input, read_csv() will create two columns with the column name 'Nat'
+	# 		Duplicate column names will cause signifcant problems during later data analysis
+	# 		To solve this, we'll rename the first 'Nat' column to 'Nationality'
+	# 		The remaining, single 'Nat' column should now correspond only to 'Natural Fitness'
 	if len(df.columns) != len(set(df.columns)):
 		found_nationality = False
 		new_cols = []
@@ -98,6 +101,29 @@ def preprocessing(df):
 				new_cols.append(col)
 
 		df.columns = new_cols
+	# 	- for './view/Squad.fmf':
+	# 		If both features appear in the same input, read_csv() will auto-rename the second 'Nat' in df.columns to 'Nat .1'
+	#		Since 'Natural Fitness' should come after 'Nationality', we end up with 'Nat' == Nationality and 'Nat .1' == Natural Fitness
+	#		NOTE: Bc/ of this assumption, 'Natural Fitness' must(!) come after 'Nationality' in the input
+	else:
+		read_csv_recognized_duplicate = False
+		
+		for col in df.columns:
+			if col + ' .1' in df.columns:
+				read_csv_recognized_duplicate = True
+
+		if read_csv_recognized_duplicate:	
+			new_cols = []
+		
+			for col in df.columns:
+				if col == 'Nat':
+					new_cols.append('Nationality')
+				elif col == 'Nat .1':
+					new_cols.append('Nat')
+				else:
+					new_cols.append(col)
+
+			df.columns = new_cols
 
 	# Here we replace any missing values ('-') in the df with '0':
 	# 	1. Non-GK players have a value of '-' for all GK-related attributes, while
@@ -148,7 +174,7 @@ def write_df_to_csv(df, cache_filename):
 
 	print('time to write cleaned data to file: {:.3f}s'.format(time.time() - write_df_to_csv_start_time))
 
-def player_analyis(df):
+def player_analyis(df, sort_by):
 
 	df['technical_sum'] = sum(df[attribute] for attribute in TECHNICAL_ATTRIBUTES)
 	df['mental_sum'] 	= sum(df[attribute] for attribute in MENTAL_ATTRIBUTES)
@@ -164,7 +190,9 @@ def player_analyis(df):
 
 	df = relative_score(df)
 
-	df = df.sort_values(by='relative_score', ascending=False)
+	df = set_pieces(df)
+
+	df = df.sort_values(by=sort_by, ascending=False)
 
 	return df
 
@@ -181,7 +209,15 @@ def relative_score(df, range_min=0, range_max=100):
 
 	return df
 
+def set_pieces(df):
+
+	df['set_pieces'] = 2 * df['Cor'] + 2 * df['Fre'] + df['Cro'] + df['Tec'] + df['Fla'] + df['Vis']
+
+	return df
+
 def print_players(df, features, print_no):
+	# Overrides the default table break for pandas
+	pd.set_option('display.max_columns', None)
 
 	print(df[features].head(print_no))
 
@@ -214,7 +250,9 @@ if __name__ == '__main__':
 
 	input_filename = DEFAULT_INPUT_FILENAME
 	caching = False
+	hide_goalkeepers = False
 	print_no = DEFAULT_PRINT_NO
+	sort_by = DEFAULT_SORT_BY
 
 	# Iterate through args
 	while len(args) > 0:
@@ -227,12 +265,19 @@ if __name__ == '__main__':
 			caching = True
 		elif arg == '-n' or arg == '--number':
 			print_no = int(args.pop(0))
+		elif arg == '-gk' or arg == '--hide-goalkeepers':
+			hide_goalkeepers = True
+		elif arg == '-s' or arg == '--sort':
+			sort_by = args.pop(0)
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			print_help_msg(1)
 
 	df = load_players(input_filename, caching)
 
-	df = player_analyis(df)
+	if hide_goalkeepers:
+		df = df[df['Position'] != 'GK']
 
-	print_players(df, ['attribute_sum', 'relative_score', 'Age', 'Name'], print_no)
+	df = player_analyis(df, sort_by)
+
+	print_players(df, ['set_pieces', 'Club', 'Age', 'Name'], print_no)
