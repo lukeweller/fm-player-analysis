@@ -24,7 +24,7 @@ def skip_rows(x):
 # Simple wrapper function that calls load_all_players_rtf() or load_all_players_csv(), depending on state
 def load_players(input_filename, caching):
 
-	cache_filename = './input/csv/' + input_filename[12:-4] + '_cleaned.csv'
+	cache_filename = './input/csv/' + input_filename.split('/')[2][:-4] + '_cleaned.csv'
 
 	if caching and os.path.exists(cache_filename):
 		df = load_players_csv(cache_filename)
@@ -230,6 +230,7 @@ def print_help_msg(exit_status):
 		  'Options:\n'
 		  '	-i, --input\n'
 		  '		specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
+		  '		use -i multiple times to load multiple input'
 		  ' -c, --cache\n'
 		  '		enables caching; when enabled, the script will first attempt to load player\n'
 		  '		data from an exisiting, cleaned .csv that corresponds to the given input .rtf\n'
@@ -248,11 +249,12 @@ if __name__ == '__main__':
 
 	args = sys.argv[1:]
 
-	input_filename = DEFAULT_INPUT_FILENAME
-	caching = False
+	caching 		 = False
 	hide_goalkeepers = False
-	print_no = DEFAULT_PRINT_NO
-	sort_by = DEFAULT_SORT_BY
+
+	input_filename_list = []
+	print_no 			= DEFAULT_PRINT_NO
+	sort_by 			= DEFAULT_SORT_BY
 
 	# Iterate through args
 	while len(args) > 0:
@@ -260,7 +262,7 @@ if __name__ == '__main__':
 		if arg == '-h' or arg == '--help':
 			print_help_msg(0)
 		elif arg == '-i' or arg == '--input':
-			input_filename = args.pop(0)
+			input_filename_list.append(args.pop(0))
 		elif arg == '-c' or arg == '--cache':
 			caching = True
 		elif arg == '-n' or arg == '--number':
@@ -273,11 +275,18 @@ if __name__ == '__main__':
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			print_help_msg(1)
 
-	df = load_players(input_filename, caching)
+	if len(input_filename_list) == 0:
+		input_filename_list.append(DEFAULT_INPUT_FILENAME)
+
+	df = load_players(input_filename_list[0], caching)
+
+	for input_filename in input_filename_list[1:]:
+		new_df = load_players(input_filename, caching)
+		df = pd.concat([df, new_df])
 
 	if hide_goalkeepers:
 		df = df[df['Position'] != 'GK']
 
 	df = player_analyis(df, sort_by)
 
-	print_players(df, ['set_pieces', 'Club', 'Age', 'Name'], print_no)
+	print_players(df, ['attribute_sum', 'Club', 'Age', 'Name'], print_no)
