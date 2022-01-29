@@ -22,11 +22,11 @@ def skip_rows(x):
 		return True
 
 # Simple wrapper function that calls load_all_players_rtf() or load_all_players_csv(), depending on state
-def load_players(input_filename, caching):
+def load_players(input_filename, caching, new_input):
 
 	cache_filename = './input/csv/' + input_filename.split('/')[2][:-4] + '_cleaned.csv'
 
-	if caching and os.path.exists(cache_filename):
+	if caching and os.path.exists(cache_filename) and new_input == False:
 		df = load_players_csv(cache_filename)
 	else:
 		df = load_players_rtf(input_filename)
@@ -229,17 +229,22 @@ def print_help_msg(exit_status):
 		  '	3. Use `./player_analysis.py` to analyze players and print top canidates\n'
 		  'Options:\n'
 		  '	-i, --input\n'
-		  '		specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
-		  '		use -i multiple times to load multiple input'
-		  ' -c, --cache\n'
-		  '		enables caching; when enabled, the script will first attempt to load player\n'
+		  '		Specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
+		  '		Use -i multiple times to load multiple inputs; e.g. ./player_analysis -i input/rtf/player_search.rtf -i input/rtf/squad.rtf\n'
+		  ' -c, --caching\n'
+		  '		Enables caching; When enabled, the script will first attempt to load player\n'
 		  '		data from an exisiting, cleaned .csv that corresponds to the given input .rtf\n'
 		  '		e.g., ./input/rtf/player_search.rtf -> ./input/csv/player_search_cleaned.csv\n'
-		  '		if the script does not find a cleaned .csv, it will process the .rtf normally\n'
+		  '		If the script does not find a cleaned .csv, it will process the .rtf normally\n'
 		  '		and save the clean df into a new .csv file in the ./input/csv/ folder;\n'
-		  '		enabling caching allows for quicker processing times on subsequent runs\n'
-		  ' -n, --number\n'
-		  '		specify the number of analyzed players to print; e.g., ./player_analyis.py -n 25'
+		  '		Enabling caching allows for quicker processing times on subsequent runs\n'
+		  ' -n, --new\n'
+		  '		Used in conjunction with caching (-c); After exporting a new .rtf input from FM, use this flag to ignore\n'
+		  '		the existing, cleaned .csv file and instead process the .rtf as though caching was disabled\n'
+		  '		e.g. ./player_analyis.py -c -n -i ./input/rtf/player_search.rtf\n'
+		  ' -l, --length\n'
+		  '		specify the length of the output (i.e., the number of analyzed players to print)\n'
+		  '		e.g., ./player_analyis.py -l 50\n'
 		  '	-h, --help\n'
 		  '		print this message')
 
@@ -250,6 +255,7 @@ if __name__ == '__main__':
 	args = sys.argv[1:]
 
 	caching 		 = False
+	new_input		 = False
 	hide_goalkeepers = False
 
 	input_filename_list = []
@@ -265,7 +271,9 @@ if __name__ == '__main__':
 			input_filename_list.append(args.pop(0))
 		elif arg == '-c' or arg == '--cache':
 			caching = True
-		elif arg == '-n' or arg == '--number':
+		elif arg == '-n' or arg == '--new':
+			new_input = True
+		elif arg == '-l' or arg == '--length':
 			print_no = int(args.pop(0))
 		elif arg == '-gk' or arg == '--hide-goalkeepers':
 			hide_goalkeepers = True
@@ -278,10 +286,10 @@ if __name__ == '__main__':
 	if len(input_filename_list) == 0:
 		input_filename_list.append(DEFAULT_INPUT_FILENAME)
 
-	df = load_players(input_filename_list[0], caching)
+	df = load_players(input_filename_list[0], caching, new_input)
 
 	for input_filename in input_filename_list[1:]:
-		new_df = load_players(input_filename, caching)
+		new_df = load_players(input_filename, caching, new_input)
 		df = pd.concat([df, new_df])
 
 	if hide_goalkeepers:
