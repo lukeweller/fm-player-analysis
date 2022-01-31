@@ -189,8 +189,8 @@ def player_analyis(df, sort_by):
 	df['attribute_score'] = df['attribute_sum'] / (len(ALL_ATTRIBUTES) * 20)
 
 	df = relative_score(df)
-
 	df = set_pieces(df)
+	# df = best_value(df)
 
 	df = df.sort_values(by=sort_by, ascending=False)
 
@@ -212,6 +212,31 @@ def relative_score(df, range_min=0, range_max=100):
 def set_pieces(df):
 
 	df['set_pieces'] = 2 * df['Cor'] + 2 * df['Fre'] + df['Cro'] + df['Tec'] + df['Fla'] + df['Vis']
+
+	return df
+
+def parse_value(value):
+	# No multiplier found, strip '$' and return value as a float
+	if value[-1].isdigit():
+		return float(value[1:])
+
+	else:
+		base = float(value[1:-1])
+		multiplier = value[-1]
+
+		if multiplier == 'M':
+			return base * 1000000
+		elif multiplier == 'K':
+			return base * 10000
+		else:
+			print('error: unable to parse multiplier in value: {}'.format(value))
+			exit(1)
+
+def best_value(df):
+
+	df['float_value'] = df.apply(lambda x: parse_value(x['Value']), axis = 1)
+
+	df = df[df['float_value'] < 5000000]
 
 	return df
 
@@ -297,4 +322,4 @@ if __name__ == '__main__':
 
 	df = player_analyis(df, sort_by)
 
-	print_players(df, ['attribute_sum', 'Club', 'Age', 'Name'], print_no)
+	print_players(df, ['attribute_sum', 'Value', 'Age', 'Name'], print_no)
