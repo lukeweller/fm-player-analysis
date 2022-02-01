@@ -24,7 +24,7 @@ def skip_rows(x):
 # Simple wrapper function that calls load_all_players_rtf() or load_all_players_csv(), depending on state
 def load_players(input_filename, caching, new_input):
 
-	cache_filename = './input/csv/' + input_filename.split('/')[2][:-4] + '_cleaned.csv'
+	cache_filename = './input/csv/' + input_filename.split('/')[-1][:-4] + '_cleaned.csv'
 
 	if caching and os.path.exists(cache_filename) and new_input == False:
 		df = load_players_csv(cache_filename)
@@ -249,25 +249,27 @@ def print_players(df, features, print_no):
 def print_help_msg(exit_status):
 	
 	print('Usage:\n'
-		  '	1. Import custom view file (`./views/Player Search.fmf`) into the \'Player Search\' page while in FM\n'
+		  '	1. Import custom view file (`./views/Player Search.fmf`) into the \'Player Search\' page\n'
 		  '	2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file to `./input/player_search.rtf`\n'
 		  '	3. Use `./player_analysis.py` to analyze players and print top canidates\n'
 		  'Options:\n'
 		  '	-i, --input\n'
 		  '		Specify the name of the input file; e.g., ./player_analysis.py -i [filename]\n'
-		  '		Use -i multiple times to load multiple inputs; e.g. ./player_analysis -i input/rtf/player_search.rtf -i input/rtf/squad.rtf\n'
-		  ' -c, --caching\n'
+		  '		Use -i multiple times to load multiple inputs;\n'
+		  '		e.g. ./player_analysis -i input/rtf/player_search.rtf -i input/rtf/squad.rtf\n'
+		  '	-c, --caching\n'
 		  '		Enables caching; When enabled, the script will first attempt to load player\n'
 		  '		data from an exisiting, cleaned .csv that corresponds to the given input .rtf\n'
 		  '		e.g., ./input/rtf/player_search.rtf -> ./input/csv/player_search_cleaned.csv\n'
 		  '		If the script does not find a cleaned .csv, it will process the .rtf normally\n'
 		  '		and save the clean df into a new .csv file in the ./input/csv/ folder;\n'
 		  '		Enabling caching allows for quicker processing times on subsequent runs\n'
-		  ' -n, --new\n'
-		  '		Used in conjunction with caching (-c); After exporting a new .rtf input from FM, use this flag to ignore\n'
-		  '		the existing, cleaned .csv file and instead process the .rtf as though caching was disabled\n'
+		  '	-n, --new\n'
+		  '		Used in conjunction with caching (-c); After exporting a new .rtf input from FM,\n'
+		  '		use this flag to ignore the existing, cleaned .csv file and instead process\n'
+		  '		the .rtf as though caching was disabled\n'
 		  '		e.g. ./player_analyis.py -c -n -i ./input/rtf/player_search.rtf\n'
-		  ' -l, --length\n'
+		  '	-l, --length\n'
 		  '		specify the length of the output (i.e., the number of analyzed players to print)\n'
 		  '		e.g., ./player_analyis.py -l 50\n'
 		  '	-h, --help\n'
