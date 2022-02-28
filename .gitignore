@@ -1,0 +1,2 @@
+# Ignores python3 virtual enviroment (venv)
+env/

@@ -6,6 +6,7 @@
 3. Use `./player_analysis.py` to analyze players and print top canidates
 
 ### Options:
+```
 -i, --input
 	specify the name of the input file;
 	e.g., ./player_analysis.py -i [filename]
@@ -16,6 +17,7 @@
 	enabling caching allows for quicker processing times on subsequent runs
 -n, --number
 	specify the number of analyzed players to print; 
-	e.g., ./player_analyis.py -n 25\
+	e.g., ./player_analyis.py -n 25
 -h, --help
 	print this message
+```
