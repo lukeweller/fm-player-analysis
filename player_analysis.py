@@ -240,6 +240,27 @@ def best_value(df):
 
 	return df
 
+def build_html(df, print_no):
+
+	build_html_start_time = time.time()
+
+	with open('./web-output/out.txt', 'w') as web_output:
+
+		web_output.write('<table>\n<tr>\n')
+		for column in df.columns:
+			web_output.write('<th>{}</th>\n'.format(column))
+		web_output.write('</tr>\n')
+		
+		for index, row in df.head(print_no).iterrows():
+			web_output.write('<tr>\n')
+			for feature in df.columns:		
+				web_output.write('<td>{}</td>\n'.format(row[feature]))
+			web_output.write('</tr>\n')
+
+		web_output.write('</table>\n')
+
+	print('time to build html: {:.3f}s'.format(time.time() - build_html_start_time))
+
 def print_players(df, features, print_no):
 	# Overrides the default table break for pandas
 	pd.set_option('display.max_columns', None)
@@ -284,6 +305,7 @@ if __name__ == '__main__':
 	caching 		 = False
 	new_input		 = False
 	hide_goalkeepers = False
+	build_webpage	 = False
 
 	input_filename_list = []
 	print_no 			= DEFAULT_PRINT_NO
@@ -306,6 +328,8 @@ if __name__ == '__main__':
 			hide_goalkeepers = True
 		elif arg == '-s' or arg == '--sort':
 			sort_by = args.pop(0)
+		elif arg == '-w' or arg == '--web':
+			build_webpage = True
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			print_help_msg(1)
@@ -324,4 +348,7 @@ if __name__ == '__main__':
 
 	df = player_analyis(df, sort_by)
 
-	print_players(df, ['attribute_sum', 'Value', 'Age', 'Name'], print_no)
+	if build_webpage:
+		build_html(df, print_no)
+
+	print_players(df, ['attribute_sum', 'technical_score', 'mental_score', 'physical_score', 'Age', 'Name'], print_no)
