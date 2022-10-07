@@ -156,7 +156,7 @@ def clean_incomplete_scouting(df):
 		# as a range instead of a single value (e.g. Pac: 10-15). In order to perform
 		# future arithmetic operations on these columns, we'll need to convert those 
 		# ranges into a single, mean value (rounding down)
-		if int(row['Know. Lvl'][:-1]) <= 76:
+		if int(row['Know. Lvl'][:-1]) <= 77:
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
 					range_mean = int(sum(int(_) for _ in row[attribute].split('-')) / 2)
