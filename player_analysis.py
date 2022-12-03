@@ -5,7 +5,7 @@ import pandas as pd
 
 DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
 DEFAULT_PRINT_NO = 50
-DEFAULT_SORT_BY = 'relative_score'
+DEFAULT_SORT_BY = 'attribute_sum'
 
 TECHNICAL_ATTRIBUTES = ['Cor', 'Cro', 'Dri', 'Fin', 'Fir', 'Fre', 'Hea', 'Lon', 'L Th', 'Mar', 'Pas', 'Pen', 'Tck', 'Tec']
 MENTAL_ATTRIBUTES 	 = ['Agg', 'Ant', 'Bra', 'Cmp', 'Cnt', 'Dec', 'Det', 'Fla', 'Ldr', 'OtB', 'Pos', 'Tea', 'Vis', 'Wor']
@@ -190,9 +190,8 @@ def player_analyis(df, sort_by):
 
 	df = relative_score(df)
 	df = set_pieces(df)
-	# df = best_value(df)
-
-	df = df.sort_values(by=sort_by, ascending=False)
+	df = total_cost(df)
+	df = attributes_per_dollar(df)
 
 	return df
 
@@ -215,13 +214,13 @@ def set_pieces(df):
 
 	return df
 
-def parse_value(value):
+def convert_multipliers(value):
 	# No multiplier found, strip '$' and return value as a float
 	if value[-1].isdigit():
-		return float(value[1:])
+		return float(value[1:].replace(',',''))
 
 	else:
-		base = float(value[1:-1])
+		base = float(value[1:-1].replace(',',''))
 		multiplier = value[-1]
 
 		if multiplier == 'M':
@@ -232,11 +231,46 @@ def parse_value(value):
 			print('error: unable to parse multiplier in value: {}'.format(value))
 			exit(1)
 
-def best_value(df):
+# Helper function for lambda function in total_cost()
+def total_cost_helper(transfer_value, min_wage_demands, max_wage_demands):
+	# Transfer value is 'Not for Sale' or 'Unknown'
+	if transfer_value == 'Not for Sale' or transfer_value == 'Unknown':
+		return 'N/A'
 
-	df['float_value'] = df.apply(lambda x: parse_value(x['Value']), axis = 1)
+	# Transfer value listed as a range
+	elif '-' in transfer_value:
+		min_transfer_value = convert_multipliers(transfer_value.split('-')[0].strip())
+		max_transfer_value = convert_multipliers(transfer_value.split('-')[1].strip())
 
-	df = df[df['float_value'] < 5000000]
+		transfer_value = (min_transfer_value + max_transfer_value) / 2
+
+	# Transfer value is single number
+	else:
+		transfer_value = convert_multipliers(transfer_value)
+
+	# Player is not interested in signing
+	if min_wage_demands == 'N/A' and max_wage_demands == 'N/A':
+		return 'N/A'
+
+	else:
+		min_wage_demands = convert_multipliers(min_wage_demands.split(' ')[0])
+		max_wage_demands = convert_multipliers(max_wage_demands.split(' ')[0])
+
+		wage_demands = (min_wage_demands + max_wage_demands) / 2
+		# Total cost of wages for 5-year contract
+		total_wage_cost = wage_demands * 52 * 5
+
+	return "${:,}M".format((transfer_value + total_wage_cost) / 1000000)
+
+def total_cost(df):
+
+	df['total_cost'] = df.apply(lambda x: total_cost_helper(x['Transfer Value'], x['Min WD'], x['Max WD']), axis = 1)
+
+	return df
+
+def attributes_per_dollar(df):
+
+	df['attributes_per_dollar'] = df.apply(lambda x: 'N/A' if x['total_cost'] == 'N/A' else 100000 * (x['attribute_sum'] / convert_multipliers(x['total_cost'])), axis = 1)
 
 	return df
 
@@ -263,7 +297,9 @@ def build_html(df, print_no):
 
 def print_players(df, features, print_no):
 	# Overrides the default table break for pandas
-	pd.set_option('display.max_columns', None)
+	pd.set_option('display.expand_frame_repr', False)
+
+	# pd.set_option('display.max_columns', None)
 
 	print(df[features].head(print_no))
 
@@ -302,10 +338,11 @@ if __name__ == '__main__':
 
 	args = sys.argv[1:]
 
-	caching 		 = False
-	new_input		 = False
-	hide_goalkeepers = False
-	build_webpage	 = False
+	caching 		  = False
+	new_input		  = False
+	hide_goalkeepers  = False
+	hide_uninterested = False
+	build_webpage	  = False
 
 	input_filename_list = []
 	print_no 			= DEFAULT_PRINT_NO
@@ -328,6 +365,8 @@ if __name__ == '__main__':
 			hide_goalkeepers = True
 		elif arg == '-s' or arg == '--sort':
 			sort_by = args.pop(0)
+		elif arg == '-u' or arg == '--uninterested':
+			hide_uninterested = True
 		elif arg == '-w' or arg == '--web':
 			build_webpage = True
 		else:
@@ -348,7 +387,12 @@ if __name__ == '__main__':
 
 	df = player_analyis(df, sort_by)
 
+	if hide_uninterested:
+		df = df[df['total_cost'] != 'N/A']
+
 	if build_webpage:
 		build_html(df, print_no)
 
-	print_players(df, ['attribute_sum', 'technical_score', 'mental_score', 'physical_score', 'Age', 'Name'], print_no)
+	df = df.sort_values(by=sort_by, ascending=False)
+
+	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'attributes_per_dollar'], print_no)
