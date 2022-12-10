@@ -43,48 +43,44 @@ ROLES = {
 										 ['Heading', 'Bravery', 'Jumping Reach', 'Strength']]}],
 
 # Midfield Roles
-'Defensive Midfielder':    [{'Defend':  [[],
-										 []]}, 
-							{'Support': [[],
-										 []]}],
-'Deep Lying Playmaker':    [{'Defend':  [[],
-										 []]}, 
-							{'Support': [[],
-										 []]}],
-'Ball Winning Midfielder': [{'Defend':  [[],
-										 []]}, 
-							{'Support': [[],
-										 []]}],
-'Anchor Man':              [{'Defend':  [[],
-										 []]}],
-'Half Back':               [{'Defend':  [[],
-										 []]}],
-'Regista':                 [{'Support': [[],
-										 []]}],
-'Roaming Playmaker':       [{'Support': [[],
-										 []]}],
-'Segundo Volante':         [{'Support': [[],
-										 []]}, 
-							{'Attack':  [[],
-										 []]}],
-'Central Midfielder':      [{'Defend':  [[],
-										 []]},
-							{'Support': [[],
-										 []]},
-							{'Attack':  [[],
-										 []]}],
-'Box-to-Box Midfielder':   [{'Support': [[],
-										 []]}],
-'Advanced Playmaker':      [{'Support': [[],
-										 []]}, 
-							{'Attack':  [[],
-										 []]}],
-'Mezzala':                 [{'Support': [[],
-										 []]}, 
-							{'Attack':  [[],
-										 []]}],
-'Carrilero':               [{'Support': [[],
-										 []]}],
+# 'Defensive Midfielder':    [{'Defend':  [[],
+# 										 []]}, 
+# 							{'Support': [[],
+# 										 []]}],
+# 'Deep Lying Playmaker':    [{'Defend':  [[],
+# 										 []]}, 
+# 							{'Support': [[],
+# 										 []]}],
+# 'Ball Winning Midfielder': [{'Defend':  [[],
+# 										 []]}, 
+# 							{'Support': [[],
+# 										 []]}],
+# 'Anchor Man':              [{'Defend':  [[],
+# 										 []]}],
+# 'Half Back':               [{'Defend':  [[],
+# 										 []]}],
+'Regista':                 [{'Support': [['First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Flair', 'Off The Ball', 'Teamwork', 'Vision'],
+										 ['Dribbling', 'Long Shots', 'Anticipation', 'Balance']]}],
+'Roaming Playmaker':       [{'Support': [['First Touch', 'Passing', 'Technique', 'Anticipation', 'Composure', 'Decisions', 'Off The Ball', 'Teamwork', 'Vision', 'Work Rate', 'Acceleration', 'Stamina'],
+										 ['Dribbling', 'Long Shots', 'Concentration', 'Positioning', 'Agility']]}], 
+# 'Segundo Volante':         [{'Support': [[],
+# 										 []]}, 
+# 							{'Attack':  [[],
+# 										 []]}],
+# 'Central Midfielder':      [{'Defend':  [[],
+# 										 []]},
+# 							{'Support': [[],
+# 										 []]},
+# 							{'Attack':  [[],
+# 										 []]}],
+# 'Box-to-Box Midfielder':   [{'Support': [[],
+# 										 []]}],
+# 'Mezzala':                 [{'Support': [[],
+# 										 []]}, 
+# 							{'Attack':  [[],
+# 										 []]}],
+# 'Carrilero':               [{'Support': [[],
+# 										 []]}],
 
 # Flank Roles
 'Full Back':             [{'Defend':  [['Marking', 'Tackling', 'Anticipation', 'Concentration', 'Positioning'],
@@ -116,11 +112,11 @@ ROLES = {
 						  {'Support': [['Passing', 'Tackling', 'Decisions', 'Teamwork', 'Work Rate', 'Stamina'],
 						  			   ['Crossing', 'First Touch', 'Technique', 'Anticipation', 'Composure', 'Concentration', 'Off The Ball', 'Positioning', 'Vision']]},
 						  {'Attack':  [['Crossing', 'First Touch', 'Passing', 'Decisions', 'Teamwork', 'Work Rate', 'Stamina'],
-						  			   ['Tackling', 'Technique', 'Anticipation', 'Composure', 'Off	The Ball', 'Vision']]}],
+						  			   ['Tackling', 'Technique', 'Anticipation', 'Composure', 'Off The Ball', 'Vision']]}],
 'Winger':                [{'Support': [['Crossing', 'Dribbling', 'Technique', 'Off The Ball', 'Acceleration', 'Pace'],
 									   ['First Touch', 'Passing', 'Work Rate', 'Agility', 'Stamina']]}, 
 						  {'Attack':  [['Crossing', 'Dribbling', 'Technique', 'Off The Ball', 'Acceleration', 'Pace'],
-									   ['First Touch', 'Passing', 'Anticipation', 'Flair', ' Agility']]}],
+									   ['First Touch', 'Passing', 'Anticipation', 'Flair', 'Agility']]}],
 'Defensive Winger':      [{'Defend':  [['Technique', 'Anticipation', 'Off The Ball', 'Positioning', 'Teamwork', 'Work Rate', 'Stamina'],
 									   ['Crossing', 'Dribbling', 'First Touch', 'Marking', 'Tackling', 'Agression', 'Concentration', 'Decisions', 'Acceleration']]}, 
 						  {'Support': [['Crossing', 'Technique', 'Off The Ball', 'Teamwork', 'Work Rate', 'Stamina'],
@@ -132,69 +128,112 @@ ROLES = {
 'Inverted Winger':       [{'Support': [['Dribbling', 'Passing', 'Technique', 'Off The Ball', 'Acceleration'],
 									   ['Crossing', 'First Touch', 'Long Shots', 'Composure', 'Decisions', 'Vision', 'Work Rate', 'Agility', 'Pace', 'Stamina']]}, 
 						  {'Attack':  [['Dribbling', 'Passing', 'Technique', 'Off The Ball', 'Acceleration', 'Agility'],
-									   ['Crossing', 'First Touch', 'Long Shots', 'Anticipation', 'Composure', 'Decisions', 'Flair', 'Vision', 'Pace']]}]								   
+									   ['Crossing', 'First Touch', 'Long Shots', 'Anticipation', 'Composure', 'Decisions', 'Flair', 'Vision', 'Pace']]}],								   
+'Wide Target Forward':  [{'Support':  [['Heading', 'Bravery', 'Teamwork', 'Jumping Reach', 'Strength'],
+									   ['Crossing', 'First Touch', 'Anticipation', 'Off The Ball', 'Work Rate', 'Balance', 'Stamina']]}, 
+						 {'Attack':   [['Heading', 'Bravery', 'Off The Ball', 'Jumping Reach', 'Strength'],
+									   ['Crossing', 'Finishing', 'First Touch', 'Anticipation', 'Teamwork', 'Work Rate', 'Balance', 'Stamina']]}],
+'Raumdeuter':  			[{'Attack':   [['Finishing', 'Anticipation', 'Composure', 'Concentration', 'Decisions', 'Off The Ball', 'Balance'],
+									   ['First Touch', 'Technique', 'Work Rate', 'Acceleration', 'Stamina']]}],							  
+'Inside Forward':  		[{'Support':  [['Dribbling', 'First Touch', 'Passing', 'Technique', 'Off The Ball', 'Acceleration', 'Agility', 'Balance'],
+									   ['Finishing', 'Long Shots', 'Anticipation', 'Composure', 'Flair', 'Vision', 'Pace']]}, 
+						 {'Attack':   [['Dribbling', 'Finishing', 'First Touch', 'Technique', 'Off The Ball', 'Acceleration', 'Agility', 'Balance'],
+									   ['Long Shots', 'Passing', 'Anticipation', 'Composure', 'Flair', 'Pace']]}],
 
 # Attacking Roles
-'Shadow Striker':  [{'Defend':  [[],
-							 	 []]}, 
-					{'Support': [[],
-								 []]}],
-'Trequarista':  [{'Attack':  [[],
-							 	 []]}, 
-					{'Support': [[],
-								 []]}],
-
+'Shadow Striker': 		[{'Attack':  [['Dribbling', 'Finishing', 'First Touch', 'Anticipation', 'Composure', 'Off The Ball', 'Acceleration'],
+							    	  ['Passing', 'Technique', 'Concentration', 'Decisions', 'Work Rate', 'Agility', 'Balance', 'Pace', 'Stamina']]}],
+'Trequarista':    		[{'Attack':  [['Dribbling', 'First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Flair', 'Off The Ball', 'Vision', 'Acceleration'],
+									  ['Finishing', 'Anticipation', 'Agility', 'Balance']]}], 
+'Enganche':    	  		[{'Support': [['First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Vision'],
+							    	  ['Dribbling', 'Anticipation', 'Flair', 'Off The Ball', 'Teamwork', 'Agility']]}], 
+'Attacking Midfielder': [{'Support': [['First Touch', 'Long Shots', 'Passing', 'Technique', 'Anticipation', 'Decisions', 'Flair', 'Off The Ball'],
+									  ['Dribbling', 'Composure', 'Vision', 'Agility']]}, 
+						 {'Attack':  [['Dribbling', 'First Touch', 'Long Shots', 'Passing', 'Technique', 'Anticipation', 'Decisions', 'Flair', 'Off The Ball'],
+									  ['Finishing', 'Composure', 'Vision', 'Agility']]}],							   
+'Advanced Playmaker':   [{'Support': [['First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Off The Ball', 'Teamwork', 'Vision'],
+									  ['Dribbling', 'Anticipation', 'Flair', 'Agility']]}, 
+						 {'Attack':  [['Dribbling', 'First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Off The Ball', 'Teamwork', 'Vision'],
+									  ['Anticipation', 'Flair', 'Acceleration', 'Agility']]}],
+'Complete Forward':   	[{'Support': [['Dribbling', 'First Touch', 'Heading', 'Long Shots', 'Passing', 'Technique', 'Anticipation', 'Composure', 'Decisions', 'Off The Ball', 'Vision', 'Acceleration', 'Agility', 'Strength'],
+									  ['Finishing', 'Teamwork', 'Work Rate', 'Balance', 'Jumping Reach', 'Pace', 'Stamina']]}, 
+						 {'Attack':  [['Dribbling', 'Finishing', 'First Touch', 'Heading', 'Technique', 'Anticipation', 'Composure', 'Off The Ball', 'Acceleration', 'Agility', 'Strength'],
+									  ['Long Shots', 'Passing', 'Decisions', 'Teamwork', 'Vision', 'Work Rate', 'Balance', 'Jumping Reach', 'Pace', 'Stamina']]}],
+'Poacher':  			[{'Attack':  [['Finishing', 'Anticipation', 'Composure', 'Off The Ball'],
+									  ['First Touch', 'Heading', 'Technique', 'Decisions', 'Acceleration']]}],
+'False Nine':  			[{'Support': [['Dribbling', 'First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Off The Ball', 'Vision', 'Acceleration', 'Agility'],
+									  ['Finishing', 'Anticipation', 'Flair', 'Teamwork', 'Balance']]}],
+'Deep Lying Forward':   [{'Support': [['First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Off The Ball', 'Teamwork'],
+									  ['Finishing', 'Anticipation', 'Flair', 'Vision', 'Balance', 'Strength']]}, 
+						 {'Attack':  [['First Touch', 'Passing', 'Technique', 'Composure', 'Decisions', 'Off The Ball', 'Teamwork'],
+									  ['Dribbling', 'Finishing', 'Anticipation', 'Flair', 'Vision', 'Balance', 'Strength']]}],
+'Pressing Forward':     [{'Defend':  [['Agression', 'Anticipation', 'Bravery', 'Decisions', 'Teamwork', 'Work Rate', 'Acceleration', 'Pace', 'Stamina'],
+									  ['First Touch', 'Composure', 'Concentration', 'Agility', 'Balance', 'Strength']]},
+						 {'Support': [['Agression', 'Anticipation', 'Bravery', 'Decisions', 'Teamwork', 'Work Rate', 'Acceleration', 'Pace', 'Stamina'],
+									  ['First Touch', 'Passing', 'Composure', 'Concentration', 'Off The Ball', 'Agility', 'Balance', 'Strength']]},
+						 {'Attack':  [['Agression', 'Anticipation', 'Bravery', 'Off The Ball', 'Teamwork', 'Work Rate', 'Acceleration', 'Pace', 'Stamina'],
+									  ['Finishing', 'First Touch', 'Composure', 'Concentration', 'Decisions', 'Agility', 'Balance', 'Strength']]}],
+'Advanced Forward':  	[{'Attack':  [['Dribbling', 'Finishing', 'First Touch', 'Technique', 'Composure', 'Off The Ball', 'Acceleration'],
+									  ['Passing', 'Anticipation', 'Decisions', 'Work Rate', 'Agility', 'Balance', 'Pace', 'Stamina']]}],
+# 'Target Forward':       [{'Defend':  [[],
+# 									  []]},
+# 						 {'Support': [[],
+# 									  []]},
+# 						 {'Attack':  [[],
+# 									  []]}],
 
 }
 
-RTF_MAP = {'Corners': 'Cor',
-		   'Crossing': 'Cro',
-		   'Dribbling':
-		   'Finishing':
-		   'First Touch':
-		   'Free Kick Tacking':
-		   'Heading':
-		   'Long Shots':
-		   'Long Throws':
-		   'Marking':
-		   'Passing':
-		   'Penalty Taking':
-		   'Tackling':
-		   'Technique':
-		   'Agression': 'Agg',
-		   'Anticipation': 'Ant',
-		   'Bravery': 'Bra',
-		   'Composure': 'Cmp',
-		   'Concentration': 'Cnt',
-		   'Decisions': 'Dec',
-		   'Determination':
-		   'Flair':
-		   'Leadership':
-		   'Off The Ball':
-		   'Positioning':
-		   'Teamwork':
-		   'Vision':
-		   'Work Rate':
-		   'Acceleration': 'Acc',
-		   'Agility': 'Agi',
-		   'Balance': 'Bal',
-		   'Jumping Reach':
-		   'Natural Fitness':
-		   'Pace':
-		   'Stamina':
-		   'Strength':
-		   'Aerial Reach': 'Aer',
-		   'Command of Area': 'Cmd',
-		   'Communication': 'Com'
-		   'Eccentricity':
-		   'Handling':
-		   'Kicking':
-		   'One On Ones':
-		   'Punching (Tendency)':
-		   'Reflexes':
-		   'Rushing Out (Tendency)':
-		   'Throwing':			
+ABBRV_MAP = {'Corners': 'Cor',
+			 'Crossing': 'Cro',
+			 'Dribbling': 'Dri',
+			 'Finishing': 'Fin',
+			 'First Touch': 'Fir',
+			 'Free Kick Tacking': 'Fre',
+			 'Heading': 'Hea',
+			 'Long Shots': 'Lon',
+			 'Long Throws': 'L Th',
+			 'Marking': 'Mar',
+			 'Passing': 'Pas',
+			 'Penalty Taking': 'Pen',
+			 'Tackling': 'Tck',
+			 'Technique': 'Tec',
+			 'Agression': 'Agg',
+			 'Anticipation': 'Ant',
+			 'Bravery': 'Bra',
+			 'Composure': 'Cmp',
+			 'Concentration': 'Cnt',
+			 'Decisions': 'Dec',
+			 'Determination': 'Det',
+			 'Flair': 'Fla',
+			 'Leadership': 'Ldr',
+			 'Off The Ball': 'OtB',
+			 'Positioning': 'Pos',
+			 'Teamwork': 'Tea',
+			 'Vision': 'Vis',
+			 'Work Rate': 'Wor',
+			 'Acceleration': 'Acc',
+			 'Agility': 'Agi',
+			 'Balance': 'Bal',
+			 'Jumping Reach': 'Jum',
+			 'Natural Fitness': 'Nat',
+			 'Pace': 'Pac',
+			 'Stamina': 'Sta',
+			 'Strength': 'Str',
+			 'Aerial Reach': 'Aer',
+			 'Command of Area': 'Cmd',
+			 'Communication': 'Com',
+			 'Eccentricity': 'Ecc',
+			 'Handling': 'Han',
+			 'Kicking': 'Kic',
+			 'One On Ones': '1v1',
+			 'Punching (Tendency)': 'Pun',
+			 'Reflexes': 'Ref',
+			 'Rushing Out (Tendency)': 'TRO',
+			 'Throwing': 'Thr'	
 }
+
+ 
 
 if __name__ == '__main__':
 

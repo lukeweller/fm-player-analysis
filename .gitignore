@@ -1,2 +1,4 @@
-# Ignores python3 virtual enviroment (venv)
+# Ignores python virtual enviroment (venv)
 env/
+# Ignores python caching dir
+__pycache__

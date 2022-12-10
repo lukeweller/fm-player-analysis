@@ -2,6 +2,7 @@
 import os, sys, time
 import pandas as pd
 # import matplotlib.pyplot as plt
+import roles as player_roles
 
 DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
 DEFAULT_PRINT_NO = 50
@@ -192,6 +193,7 @@ def player_analyis(df, sort_by):
 	df = set_pieces(df)
 	df = total_cost(df)
 	df = attributes_per_dollar(df)
+	df = role_scores(df)
 
 	return df
 
@@ -272,6 +274,65 @@ def attributes_per_dollar(df):
 
 	df['attributes_per_dollar'] = df.apply(lambda x: 'N/A' if x['total_cost'] == 'N/A' else 100000 * (x['attribute_sum'] / convert_multipliers(x['total_cost'])), axis = 1)
 
+	return df
+
+# Helper function for lambda function in role_scores()
+def role_scores_helper(player, primary_attributes, secondary_attributes):
+
+	# Multiplier controls how much more the primary attributes should contribute
+	# to the role_score (as compared to the secondary attributes)
+	primary_attributes_multiplier = 2
+	relevant_attributes_sum = 0
+
+	for attribute in primary_attributes:
+		relevant_attributes_sum += primary_attributes_multiplier * player[player_roles.ABBRV_MAP[attribute]]
+
+	for attribute in secondary_attributes:
+		relevant_attributes_sum += player[player_roles.ABBRV_MAP[attribute]]
+
+	return relevant_attributes_sum
+
+def role_scores(df):
+
+	for role in player_roles.ROLES:
+		# The duty is the main modifier for a given role (e.g. Attack, Support, etc.)
+		
+		# Returns a list where each item is a possible duty for that role
+		# For example, while iterating over the 'Inverted Winger' role, this call will
+		# return a list with two elements: one for an 'Inverted Winger' in 'Attack', and
+		# one for an 'Inverted Winger' in 'Support'
+		role_duties_list = player_roles.ROLES[role]
+		
+		# Iterates through the list of available duties for the given role
+		for role_duty in role_duties_list:
+			# role_duty is stored as a dict with one key and one value
+			# The key will be the current duty, and the value will be a list of the 
+			# relevant attributes for that duty
+			# For example, while iterating over the 'Attack' duty for the 'Inverted Winger'
+			# role, role_duty will be equal to this dict:
+			# 	{'Attack': [['Dribbling', 'Passing', 'Technique', 'Off The Ball', 'Acceleration', 'Agility'],
+			#				['Crossing', 'First Touch', 'Long Shots', 'Anticipation', 'Composure', 'Decisions', 'Flair', 'Vision', 'Pace']]}
+			
+			# We're not actually iterating here. Since the duty name (e.g. 'Attack')
+			# will always be the only key in the role_duty dict, we're using a 
+			# for loop to grab that duty name
+			for duty in role_duty:
+				
+				# role_plus_duty is a string representing a role & duty (e.g. 'Inverted Winger_Attack')
+				role_plus_duty = '{}_{}'.format(role, duty)
+				
+				# role_plus_duty_list is a list containing two smaller lists representing the
+				# primary and secondary relevant attributes for that role & duty
+				# For example, the role_plus_duty_list for 'Inverted Winger_Attack' is equal to:
+				# 	[['Dribbling', 'Passing', 'Technique', 'Off The Ball', 'Acceleration', 'Agility'],
+				#	 ['Crossing', 'First Touch', 'Long Shots', 'Anticipation', 'Composure', 'Decisions', 'Flair', 'Vision', 'Pace']]
+				role_plus_duty_list = role_duty[duty]
+				
+				primary_attributes = role_plus_duty_list[0]
+				secondary_attributes = role_plus_duty_list[1]
+
+				df[role_plus_duty] = df.apply(lambda x: role_scores_helper(x, primary_attributes, secondary_attributes), axis=1)
+				
 	return df
 
 def build_html(df, print_no):
@@ -395,4 +456,4 @@ if __name__ == '__main__':
 
 	df = df.sort_values(by=sort_by, ascending=False)
 
-	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'attributes_per_dollar'], print_no)
+	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Advanced Forward_Attack'], print_no)
