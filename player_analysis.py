@@ -177,6 +177,8 @@ def write_df_to_csv(df, cache_filename):
 
 def player_analyis(df, sort_by):
 
+	player_analyis_start_time = time.time()
+
 	df['technical_sum'] = sum(df[attribute] for attribute in TECHNICAL_ATTRIBUTES)
 	df['mental_sum'] 	= sum(df[attribute] for attribute in MENTAL_ATTRIBUTES)
 	df['physical_sum'] 	= sum(df[attribute] for attribute in PHYSICAL_ATTRIBUTES)
@@ -194,6 +196,8 @@ def player_analyis(df, sort_by):
 	df = total_cost(df)
 	df = attributes_per_dollar(df)
 	df = role_scores(df)
+
+	print('time to complete all player analysis: {:.3f}s'.format(time.time() - player_analyis_start_time))
 
 	return df
 
@@ -294,6 +298,8 @@ def role_scores_helper(player, primary_attributes, secondary_attributes):
 
 def role_scores(df):
 
+	role_scores_start_time = time.time()
+
 	for role in player_roles.ROLES:
 		# The duty is the main modifier for a given role (e.g. Attack, Support, etc.)
 		
@@ -333,6 +339,8 @@ def role_scores(df):
 
 				df[role_plus_duty] = df.apply(lambda x: role_scores_helper(x, primary_attributes, secondary_attributes), axis=1)
 				
+	print('time to complete role scores analysis: {:.3f}s'.format(time.time() - role_scores_start_time))
+
 	return df
 
 def build_html(df, print_no):
@@ -456,4 +464,4 @@ if __name__ == '__main__':
 
 	df = df.sort_values(by=sort_by, ascending=False)
 
-	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Advanced Forward_Attack'], print_no)
+	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Roaming Playmaker_Support'], print_no)
