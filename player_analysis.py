@@ -5,6 +5,7 @@ import pandas as pd
 import roles as player_roles
 
 DEFAULT_INPUT_FILENAME = './input/rtf/player_search.rtf'
+INCOMPLETE_SCOUTING_THRESHOLD = 77
 DEFAULT_PRINT_NO = 50
 DEFAULT_SORT_BY = 'attribute_sum'
 
@@ -32,8 +33,6 @@ def load_players(input_filename, caching, new_input):
 	else:
 		df = load_players_rtf(input_filename)
 		df = preprocessing(df)
-		if caching:
-			write_df_to_csv(df, cache_filename)
 
 	return df
 
@@ -85,7 +84,8 @@ def preprocessing(df):
 
 	# FM uses the abbreviation 'Nat' for both 'Nationality' and 'Natural Fitness'
 	# In its current state, read_csv() behaves differently based on the view used to create the input
-	# 	- for './views/Player Search.fmf':
+	
+	#   1. for view './views/Player Search.fmf' (Scouting -> Players -> Scouted):
 	# 		If both features appear in the same input, read_csv() will create two columns with the column name 'Nat'
 	# 		Duplicate column names will cause signifcant problems during later data analysis
 	# 		To solve this, we'll rename the first 'Nat' column to 'Nationality'
@@ -102,10 +102,11 @@ def preprocessing(df):
 				new_cols.append(col)
 
 		df.columns = new_cols
-	# 	- for './view/Squad.fmf':
+	
+	# 	2. for view './views/Squad.fmf' (Squad):
 	# 		If both features appear in the same input, read_csv() will auto-rename the second 'Nat' in df.columns to 'Nat .1'
 	#		Since 'Natural Fitness' should come after 'Nationality', we end up with 'Nat' == Nationality and 'Nat .1' == Natural Fitness
-	#		NOTE: Bc/ of this assumption, 'Natural Fitness' must(!) come after 'Nationality' in the input
+	#		NOTE: bc/ of this assumption, 'Natural Fitness' must(!) come after 'Nationality' in the input
 	else:
 		read_csv_recognized_duplicate = False
 		
@@ -135,12 +136,15 @@ def preprocessing(df):
 
 	# Check if any of the scouting of any inputted players is incomplete
 	# (i.e., attributes represented as a range, and not a single value)
-	# Incomplete can occur iff a player's knowledge level is <= 76%
-	if min(int(knowledge_lvl[:-1]) for knowledge_lvl in df['Know. Lvl']) <= 76:
+	# Incomplete can occur iff a player's knowledge level is <= 77%
+	if min(int(knowledge_lvl[:-1]) for knowledge_lvl in df['Know. Lvl']) <= INCOMPLETE_SCOUTING_THRESHOLD:
 		# If attribute ranges are found, we use clean_incomplete_scouting to replace those
 		# those ranges w/ a single, mean value
 		df = clean_incomplete_scouting(df)
 
+	# After incomplete scouting is cleaned, all attribute values in the df should be
+	# a single int value (not a range) stored as either a string or an int.  For the
+	# sake of future calculations, we want all those values to be stored as ints
 	for attribute in ALL_ATTRIBUTES:
 		df[attribute] = pd.to_numeric(df[attribute])
 
@@ -153,11 +157,11 @@ def clean_incomplete_scouting(df):
 	clean_incomplete_scouting_start_time = time.time()
 
 	for index, row in df.iterrows():
-		# If Know. Lvl <= 75% for a given player, some attributes may be represented 
+		# If Know. Lvl <= 77% for a given player, some attributes may be represented 
 		# as a range instead of a single value (e.g. Pac: 10-15). In order to perform
 		# future arithmetic operations on these columns, we'll need to convert those 
 		# ranges into a single, mean value (rounding down)
-		if int(row['Know. Lvl'][:-1]) <= 77:
+		if int(row['Know. Lvl'][:-1]) <= INCOMPLETE_SCOUTING_THRESHOLD:
 			for attribute in ALL_ATTRIBUTES:
 				if not row[attribute].isdigit() and len(row[attribute].split('-')) == 2:
 					range_mean = int(sum(int(_) for _ in row[attribute].split('-')) / 2)
@@ -175,7 +179,7 @@ def write_df_to_csv(df, cache_filename):
 
 	print('time to write cleaned data to file: {:.3f}s'.format(time.time() - write_df_to_csv_start_time))
 
-def player_analyis(df, sort_by):
+def player_analyis(df):
 
 	player_analyis_start_time = time.time()
 
@@ -451,10 +455,11 @@ if __name__ == '__main__':
 		new_df = load_players(input_filename, caching, new_input)
 		df = pd.concat([df, new_df])
 
+	if not caching:
+		df = player_analyis(df)
+
 	if hide_goalkeepers:
 		df = df[df['Position'] != 'GK']
-
-	df = player_analyis(df, sort_by)
 
 	if hide_uninterested:
 		df = df[df['total_cost'] != 'N/A']
@@ -464,4 +469,7 @@ if __name__ == '__main__':
 
 	df = df.sort_values(by=sort_by, ascending=False)
 
-	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Roaming Playmaker_Support'], print_no)
+	if caching and new_input:
+		write_df_to_csv(df, cache_filename)
+
+	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Box-to-Box Midfielder_Support'], print_no)
