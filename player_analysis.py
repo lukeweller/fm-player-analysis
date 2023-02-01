@@ -342,7 +342,21 @@ def role_scores(df):
 				secondary_attributes = role_plus_duty_list[1]
 
 				df[role_plus_duty] = df.apply(lambda x: role_scores_helper(x, primary_attributes, secondary_attributes), axis=1)
-				
+
+	# TODO: This cannot be the best way to go about this!  This should be rewritten to 
+	# take place at the same time that the role_plus_duty columns are created
+
+	# Creates a new column w/ the mean of all available duties for each role
+	# For example, there are 3 duties for the Central Midfielder role: Attack, Support, & Defend
+	# This line creates a new column 'Central Midfielder' that is equal to the mean of the columns:
+	# 'Central Midfielder_Attack', 'Central Midfielder_Support', & 'Central Midfielder_Defend'
+	for role in player_roles.ROLES:
+		matching_columns = []
+		for column in df.columns:
+			if role in column:
+				matching_columns.append(column)
+		df[role] = df[matching_columns].sum(axis=1)
+
 	print('time to complete role scores analysis: {:.3f}s'.format(time.time() - role_scores_start_time))
 
 	return df
@@ -455,8 +469,13 @@ if __name__ == '__main__':
 		new_df = load_players(input_filename, caching, new_input)
 		df = pd.concat([df, new_df])
 
-	if not caching:
+	# If caching is enabled and new_input is disabled, we should already have the features 
+	# created by player_analysis() in the dict, and we can skip that step
+	if not caching or new_input:
 		df = player_analyis(df)
+
+	if caching and new_input:
+		write_df_to_csv(df, cache_filename)
 
 	if hide_goalkeepers:
 		df = df[df['Position'] != 'GK']
@@ -469,7 +488,4 @@ if __name__ == '__main__':
 
 	df = df.sort_values(by=sort_by, ascending=False)
 
-	if caching and new_input:
-		write_df_to_csv(df, cache_filename)
-
-	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', 'Box-to-Box Midfielder_Support'], print_no)
+	print_players(df, ['attribute_sum', 'Age', 'Name', 'total_cost', sort_by], print_no)
